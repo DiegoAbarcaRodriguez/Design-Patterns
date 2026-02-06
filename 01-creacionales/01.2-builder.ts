@@ -11,6 +11,7 @@
  * * que lo componen.
  */
 
+import { runInThisContext } from "node:vm";
 import { COLORS } from '../helpers/colors.ts';
 
 //! Tarea: crear un QueryBuilder para construir consultas SQL
@@ -50,25 +51,67 @@ class QueryBuilder {
   }
 
   select(...fields: string[]): QueryBuilder {
-    throw new Error('Method not implemented.');
+    this.fields = fields;
+    return this;
   }
 
   where(condition: string): QueryBuilder {
-    throw new Error('Method not implemented.');
+    this.conditions.push(condition);
+    return this;
   }
 
   orderBy(field: string, direction: 'ASC' | 'DESC' = 'ASC'): QueryBuilder {
-    throw new Error('Method not implemented.');
+    this.orderFields.push(field);
+    if (this.orderFields.includes('ASC') || this.orderFields.includes('DESC')) {
+      this.orderFields = this.orderFields.filter(order => order !== 'ASC' && order !== 'DESC');
+    }
+    this.orderFields.push(direction);
+    return this;
   }
 
   limit(count: number): QueryBuilder {
-    throw new Error('Method not implemented.');
+    this.limitCount = count;
+    return this;
   }
 
   execute(): string {
     // Select id, name, email from users where age > 18 and country = 'Cri' order by name ASC limit 10;
-    throw new Error('Method not implemented.');
+    let query: string = 'SELECT ';
+
+
+    this.fields.forEach((order, index) => {
+      if (index === this.fields.length - 1) {
+        query += order;
+        return
+      }
+      query += order + ', ';
+    });
+
+
+    query += ` FROM ${this.table} `;
+
+    query += 'WHERE '
+    this.conditions.forEach((condition, index) => {
+      if (this.conditions.length -1 === index) {
+        query += ` ${condition}`;
+        return;
+      }
+
+      query += condition + ' AND '
+    });
+
+    query += ' ORDER BY';
+
+    this.orderFields.forEach(order => query += ` ${order}`);
+
+    query += ` LIMIT ${this.limitCount}; \n`
+
+
+
+    return query;
   }
+
+
 }
 
 function main() {
